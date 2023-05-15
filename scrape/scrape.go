@@ -16,7 +16,7 @@ import (
 type ScrapeMenu struct {
 }
 
-func DownloadTask(filePath, login_name string, p *ready.Put) chromedp.Tasks {
+func DownloadStudentsTask(filePath, login_name string, p *ready.Put) chromedp.Tasks {
 	p.StdLog.Printf("%s Download Challenge\n", login_name)
 
 	return chromedp.Tasks{
@@ -30,7 +30,7 @@ func DownloadTask(filePath, login_name string, p *ready.Put) chromedp.Tasks {
 		chromedp.Click("#download", chromedp.ByID),
 		chromedp.Sleep(4 * time.Second),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			fmt.Printf("downloaded: %s\n", filepath.Base(filePath))
+			fmt.Printf("student excel downloaded: %s\n", filepath.Base(filePath))
 			return nil
 		}),
 	}
@@ -74,10 +74,10 @@ func LoginTasks(login_url, login_name, login_id, login_pw string, p *ready.Put) 
 	}
 }
 
-func NavigateTasks(child_search_url, login_name string, p *ready.Put) chromedp.Tasks {
+func NavigateStudentsTasks(student_search_url, login_name string, p *ready.Put) chromedp.Tasks {
 	p.StdLog.Printf("%s Loitering...\n", login_name)
 	return chromedp.Tasks{
-		chromedp.Navigate(child_search_url),
+		chromedp.Navigate(student_search_url),
 		chromedp.Sleep(1 * time.Second),
 		chromedp.WaitVisible(`#ifGradeId`, chromedp.ByID),
 		chromedp.SetValue(`#ifGradeId`, "0", chromedp.ByID),
@@ -85,5 +85,32 @@ func NavigateTasks(child_search_url, login_name string, p *ready.Put) chromedp.T
 		chromedp.WaitVisible(`#ifClassId`, chromedp.ByID),
 		chromedp.SetValue(`#ifClassId`, "0", chromedp.ByID),
 		chromedp.Click(".searchButton", chromedp.ByQuery),
+	}
+}
+
+func NavigateTeachersTasks(teacher_search_url, login_name string, p *ready.Put) chromedp.Tasks {
+	p.StdLog.Printf("%s Loitering...\n", login_name)
+	return chromedp.Tasks{
+		chromedp.Navigate(teacher_search_url),
+		chromedp.Sleep(1 * time.Second),
+	}
+}
+
+func DownloadTeachersTask(filePath, login_name string, p *ready.Put) chromedp.Tasks {
+	p.StdLog.Printf("%s Download Challenge\n", login_name)
+
+	return chromedp.Tasks{
+		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(filePath),
+		chromedp.WaitVisible("#downloadExcel", chromedp.ByID),
+		chromedp.WaitEnabled("#downloadExcel", chromedp.ByID),
+		chromedp.Sleep(4 * time.Second),
+		chromedp.Click("#downloadExcel", chromedp.ByID),
+		chromedp.WaitVisible("#download", chromedp.ByID),
+		chromedp.Click("#download", chromedp.ByID),
+		chromedp.Sleep(4 * time.Second),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			fmt.Printf("downloaded teacher excel: %s\n", filepath.Base(filePath))
+			return nil
+		}),
 	}
 }

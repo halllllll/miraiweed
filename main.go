@@ -95,7 +95,7 @@ func main() {
 					// goahead
 
 					opts := append(chromedp.DefaultExecAllocatorOptions[:],
-						chromedp.Flag("headless", true),
+						chromedp.Flag("headless", false),
 						// chromedp.Flag("download_default_directory", downloadPath), 動くか不明
 					)
 
@@ -112,8 +112,10 @@ func main() {
 					tasks := chromedp.Tasks{
 						scrape.GetScrapeCookies(urls.Base),
 						scrape.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, p),
-						scrape.NavigateTasks(urls.ChildSearch, rec.Name, p),
-						scrape.DownloadTask(filepath.Join(downloadPath, rec.Name), rec.Name, p),
+						// scrape.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, p),
+						scrape.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, p),
+						// scrape.DownloadStudentsTask(filepath.Join(downloadPath, rec.Name), rec.Name, p),
+						scrape.DownloadTeachersTask(filepath.Join(downloadPath, rec.Name), rec.Name, p),
 					}
 
 					err = chromedp.Run(ctx, tasks)
