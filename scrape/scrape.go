@@ -3,7 +3,10 @@ package scrape
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"time"
+
+	"github.com/hallllll/miraiweed/ready"
 
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/network"
@@ -13,7 +16,9 @@ import (
 type ScrapeMenu struct {
 }
 
-func DownloadTask(filePath string) chromedp.Tasks {
+func DownloadTask(filePath, login_name string, p *ready.Put) chromedp.Tasks {
+	p.StdLog.Printf("%s Download Challenge\n", login_name)
+
 	return chromedp.Tasks{
 		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(filePath),
 		chromedp.WaitVisible("#downloadExcel", chromedp.ByID),
@@ -25,7 +30,7 @@ func DownloadTask(filePath string) chromedp.Tasks {
 		chromedp.Click("#download", chromedp.ByID),
 		chromedp.Sleep(4 * time.Second),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			fmt.Printf("downloaded at %s\n", filePath)
+			fmt.Printf("downloaded: %s\n", filepath.Base(filePath))
 			return nil
 		}),
 	}
@@ -55,7 +60,8 @@ func SetScrapeCookies() chromedp.Tasks {
 	}
 }
 
-func LoginTasks(login_url, login_id, login_pw string) chromedp.Tasks {
+func LoginTasks(login_url, login_name, login_id, login_pw string, p *ready.Put) chromedp.Tasks {
+	p.StdLog.Printf("%s Login Challenge\n", login_name)
 	return chromedp.Tasks{
 		chromedp.Navigate(login_url),
 		chromedp.WaitNotVisible("#loading", chromedp.ByID),
@@ -68,7 +74,8 @@ func LoginTasks(login_url, login_id, login_pw string) chromedp.Tasks {
 	}
 }
 
-func NavigateTasks(child_search_url string) chromedp.Tasks {
+func NavigateTasks(child_search_url, login_name string, p *ready.Put) chromedp.Tasks {
+	p.StdLog.Printf("%s Loitering...\n", login_name)
 	return chromedp.Tasks{
 		chromedp.Navigate(child_search_url),
 		chromedp.Sleep(1 * time.Second),

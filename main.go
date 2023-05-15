@@ -47,26 +47,29 @@ func hello() {
 }
 
 func main() {
-	hello()
-
+	p := ready.NewPut()
+	p.LoggingSetting("miraiweed.log")
 	// init save directory and csv data info
 	currentDir, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		p.StdLog.Fatal(err)
 	}
 	downloadPath := filepath.Join(currentDir, "data", strings.ReplaceAll(time.Now().Format("2006_01_02_150405.000"), ".", "_"))
-	if err = os.MkdirAll(downloadPath, 0755); err != nil {
-		log.Fatal(err)
-	}
 	csvFilePath := filepath.Join(currentDir, "info.csv")
 
 	if _, err := os.Stat(csvFilePath); os.IsNotExist(err) {
 		fmt.Println("The CSV file does not exist. Creating a new template...")
 		if err := ready.CreateCsvTemplate(csvFilePath); err != nil {
-			log.Fatalf("Failed to create the CSV template: %s", err)
+			p.StdLog.Fatalf("Failed to create the CSV template: %s", err)
 		}
 		fmt.Println("Template created. Please fill it with data and run the program again.")
+		p.InfoLog.Println("Create CSV Template.")
 		return
+	}
+	hello()
+
+	if err = os.MkdirAll(downloadPath, 0755); err != nil {
+		p.StdLog.Fatal(err)
 	}
 
 	// main process
@@ -79,15 +82,14 @@ func main() {
 			if !ok {
 				records = nil
 			} else {
-
 				wg.Add(1)
 				go func(rec ready.Record) {
 					if err = sm.Acquire(context.Background(), 1); err != nil {
-						log.Println(err)
+						p.ErrLog.Fatalln(err)
 					}
 					defer sm.Release(1)
 
-					defer fmt.Printf("%s DONE.\n", rec.Name)
+					defer p.StdLog.Printf("%s DONE.\n", rec.Name)
 					defer wg.Done()
 
 					// goahead
@@ -103,57 +105,30 @@ func main() {
 					// start
 					ctx, cancel := chromedp.NewContext(
 						allocCtx2,
-						chromedp.WithLogf(log.Printf),
+						chromedp.WithLogf(p.StdLog.Printf),
 					)
 					defer cancel()
 
 					tasks := chromedp.Tasks{
 						scrape.GetScrapeCookies(urls.Base),
-						scrape.LoginTasks(urls.Login, rec.ID, rec.PW),
-						scrape.NavigateTasks(urls.ChildSearch),
-						scrape.DownloadTask(filepath.Join(downloadPath, rec.Name)),
+						scrape.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, p),
+						scrape.NavigateTasks(urls.ChildSearch, rec.Name, p),
+						scrape.DownloadTask(filepath.Join(downloadPath, rec.Name), rec.Name, p),
 					}
 
 					err = chromedp.Run(ctx, tasks)
 					if err != nil {
-						log.Println(err)
+						p.ErrLog.Println(err)
 					}
 
 				}(record)
-				/*
-					fmt.Printf("TARGET: %s\n", record.Name)
-					opts := append(chromedp.DefaultExecAllocatorOptions[:],
-						chromedp.Flag("headless", true),
-						// chromedp.Flag("download_default_directory", downloadPath), 動くか不明
-					)
-
-					allocCtx, _ := chromedp.NewExecAllocator(context.Background(), opts...)
-
-					// start
-					ctx, cancel := chromedp.NewContext(
-						allocCtx,
-						chromedp.WithLogf(log.Printf),
-					)
-					defer cancel()
-
-					tasks := chromedp.Tasks{
-						scrape.GetScrapeCookies(base_url),
-						scrape.LoginTasks(login_url, record.ID, record.PW),
-						scrape.NavigateTasks(child_search_url),
-						scrape.DownloadTask(filepath.Join(downloadPath, record.Name)),
-					}
-
-					err = chromedp.Run(ctx, tasks)
-					if err != nil {
-						log.Println(err)
-					}
-				*/
 			}
+
 		case err, ok := <-errChan:
 			if !ok {
 				errChan = nil
 			} else {
-				log.Fatalf("Error reading CSV: %v\n", err)
+				p.ErrLog.Fatalf("Error reading CSV: %v\n", err)
 			}
 		}
 
@@ -162,5 +137,6 @@ func main() {
 		}
 	}
 	wg.Wait()
-	ready.PromptAndRead("Byeby ﾉｼ")
+	time.Sleep(2 * time.Second)
+	ready.PromptAndRead("Byebye ﾉｼ")
 }
