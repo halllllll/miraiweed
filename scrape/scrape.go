@@ -12,8 +12,7 @@ import (
 	"github.com/hallllll/miraiweed/ready"
 )
 
-type ScrapeMenu struct {
-}
+var cookies []*network.Cookie
 
 func DownloadStudentsTask(filePath, login_name string, p *ready.Put) chromedp.Tasks {
 	p.StdLog.Printf("%s Download Challenge\n", login_name)
@@ -34,8 +33,6 @@ func DownloadStudentsTask(filePath, login_name string, p *ready.Put) chromedp.Ta
 		}),
 	}
 }
-
-var cookies []*network.Cookie
 
 func GetScrapeCookies(base_url string) chromedp.Tasks {
 	return chromedp.Tasks{
