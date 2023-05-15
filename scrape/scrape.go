@@ -6,11 +6,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/hallllll/miraiweed/ready"
-
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
+	"github.com/hallllll/miraiweed/ready"
 )
 
 type ScrapeMenu struct {

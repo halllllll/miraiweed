@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -19,8 +18,10 @@ import (
 )
 
 var (
-	err  error
-	urls *ready.URLs
+	err   error
+	urls  *ready.URLs
+	P     *ready.Put
+	paths *ready.PATHs
 )
 
 func hello() {
@@ -47,33 +48,38 @@ func hello() {
 }
 
 func main() {
-	p := ready.NewPut()
-	p.LoggingSetting("miraiweed.log")
+	P = ready.NewPut()
+	P.LoggingSetting("miraiweed.log")
 	// init save directory and csv data info
-	currentDir, err := os.Getwd()
+
+	paths, err := ready.NewPATHs()
 	if err != nil {
-		p.StdLog.Fatal(err)
+		P.ErrLog.Fatal(err)
 	}
-	downloadPath := filepath.Join(currentDir, "data", strings.ReplaceAll(time.Now().Format("2006_01_02_150405.000"), ".", "_"))
-	csvFilePath := filepath.Join(currentDir, "info.csv")
+	currentDir := paths.Cd
+	downloadPath := paths.DLStorage
+	csvFilePath := filepath.Join(currentDir, ready.LoginCsvFileName)
 
 	if _, err := os.Stat(csvFilePath); os.IsNotExist(err) {
 		fmt.Println("The CSV file does not exist. Creating a new template...")
 		if err := ready.CreateCsvTemplate(csvFilePath); err != nil {
-			p.StdLog.Fatalf("Failed to create the CSV template: %s", err)
+			P.StdLog.Fatalf("Failed to create the CSV template: %s", err)
 		}
 		fmt.Println("Template created. Please fill it with data and run the program again.")
-		p.InfoLog.Println("Create CSV Template.")
+		P.InfoLog.Println("Create CSV Template.")
 		return
 	}
 	hello()
 
 	if err = os.MkdirAll(downloadPath, 0755); err != nil {
-		p.StdLog.Fatal(err)
+		P.StdLog.Fatal(err)
 	}
+	Procces(paths)
+}
 
+func Procces(paths *ready.PATHs) {
 	// main process
-	records, errChan := ready.ReadCsv(csvFilePath)
+	records, errChan := ready.ReadCsv(paths.LoginInfo)
 	var wg sync.WaitGroup
 	sm := semaphore.NewWeighted(int64(5))
 	for {
@@ -83,13 +89,13 @@ func main() {
 				records = nil
 			} else {
 				wg.Add(1)
-				go func(rec ready.Record) {
+				go func(rec ready.LoginRecord) {
 					if err = sm.Acquire(context.Background(), 1); err != nil {
-						p.ErrLog.Fatalln(err)
+						P.ErrLog.Fatalln(err)
 					}
 					defer sm.Release(1)
 
-					defer p.StdLog.Printf("%s DONE.\n", rec.Name)
+					defer P.StdLog.Printf("%s DONE.\n", rec.Name)
 					defer wg.Done()
 
 					// goahead
@@ -105,22 +111,22 @@ func main() {
 					// start
 					ctx, cancel := chromedp.NewContext(
 						allocCtx2,
-						chromedp.WithLogf(p.StdLog.Printf),
+						chromedp.WithLogf(P.StdLog.Printf),
 					)
 					defer cancel()
 
 					tasks := chromedp.Tasks{
 						scrape.GetScrapeCookies(urls.Base),
-						scrape.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, p),
+						scrape.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, P),
 						// scrape.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, p),
-						scrape.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, p),
+						scrape.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, P),
 						// scrape.DownloadStudentsTask(filepath.Join(downloadPath, rec.Name), rec.Name, p),
-						scrape.DownloadTeachersTask(filepath.Join(downloadPath, rec.Name), rec.Name, p),
+						scrape.DownloadTeachersTask(filepath.Join(paths.DLStorage, rec.Name), rec.Name, P),
 					}
 
 					err = chromedp.Run(ctx, tasks)
 					if err != nil {
-						p.ErrLog.Println(err)
+						P.ErrLog.Println(err)
 					}
 
 				}(record)
@@ -130,7 +136,7 @@ func main() {
 			if !ok {
 				errChan = nil
 			} else {
-				p.ErrLog.Fatalf("Error reading CSV: %v\n", err)
+				P.ErrLog.Fatalf("Error reading CSV: %v\n", err)
 			}
 		}
 
