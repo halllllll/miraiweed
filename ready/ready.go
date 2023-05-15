@@ -1,10 +1,15 @@
 package ready
 
 import (
+	"bufio"
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
+	"log"
 	"os"
+
+	"golang.org/x/sync/semaphore"
 
 	"github.com/gocarina/gocsv"
 	"github.com/spkg/bom"
@@ -14,6 +19,31 @@ type Record struct {
 	Name string `csv:"Name"`
 	ID   string `csv:"ID"`
 	PW   string `csv:"PW"`
+}
+
+type URLs struct {
+	Num                    string
+	Base                   string
+	Login                  string
+	Service                string
+	DisplaySchoolAdminMenu string
+	ChildSearch            string
+	ChildSearchReflesh     string
+	Search                 string
+}
+
+func NewUrls() *URLs {
+	return &URLs{}
+}
+
+func (u *URLs) PrepareUrl(num string) {
+	u.Num = num
+	u.Base = fmt.Sprintf("https://miraiseed%s.benesse.ne.jp", u.Num)
+	u.Login = fmt.Sprintf("%s/seed/vw020101/displayLogin/1", u.Base)
+	u.Service = fmt.Sprintf("%s/seed/vw030101/displaySchoolAdminMenu", u.Base)
+	u.ChildSearch = fmt.Sprintf("%s/seed/vw030501/displaySearchChildInfo", u.Base)
+	u.ChildSearchReflesh = fmt.Sprintf("%s/seed/vw030501/refresh", u.Base)
+	u.Search = fmt.Sprintf("%s/seed/vw030501/search", u.Base)
 }
 
 func CreateCsvTemplate(csvfilepath string) error {
@@ -45,13 +75,23 @@ func ReadCsv(csvfilepath string) (chan Record, chan error) {
 	}
 	c := make(chan Record)
 	errChan := make(chan error, 1)
-	// gocsvだとうまく逐次処理が書けなかった（別ファイルからだと難しいのか？）
+	// gocsvのMarshalToChanだとうまく逐次処理が書けなかった（別ファイルからだと難しいのか？）
+
+	sm := semaphore.NewWeighted(int64(4))
+
 	go func() {
 		defer f.Close()
 		defer close(c)
 		defer close(errChan)
+		if err = sm.Acquire(context.Background(), 1); err != nil {
+			log.Println(err)
+		}
+		defer sm.Release(1)
 
 		reader := csv.NewReader(bom.NewReader(f))
+		// headerを捨てる
+		_, _ = reader.Read()
+
 		for {
 			record, err := reader.Read()
 			if err == io.EOF {
@@ -74,4 +114,13 @@ func ReadCsv(csvfilepath string) (chan Record, chan error) {
 	}()
 
 	return c, errChan
+}
+
+func PromptAndRead(message string) (string, error) {
+	fmt.Fprint(os.Stdout, message)
+	scanner := bufio.NewScanner(os.Stdin)
+	if scanner.Scan() {
+		return scanner.Text(), nil
+	}
+	return "", scanner.Err()
 }

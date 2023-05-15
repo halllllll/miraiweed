@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/chromedp/cdproto/browser"
@@ -17,11 +18,16 @@ func DownloadTask(filePath string) chromedp.Tasks {
 		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(filePath),
 		chromedp.WaitVisible("#downloadExcel", chromedp.ByID),
 		chromedp.WaitEnabled("#downloadExcel", chromedp.ByID),
-		chromedp.Sleep(2 * time.Second),
+		chromedp.Sleep(4 * time.Second),
 		chromedp.Click("#downloadExcel", chromedp.ByID),
 		chromedp.WaitVisible("#f30501 > div:nth-child(8)", chromedp.ByQuery),
 		chromedp.WaitVisible("#download", chromedp.ByID),
 		chromedp.Click("#download", chromedp.ByID),
+		chromedp.Sleep(4 * time.Second),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			fmt.Printf("downloaded at %s\n", filePath)
+			return nil
+		}),
 	}
 }
 
