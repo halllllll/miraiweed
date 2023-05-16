@@ -15,11 +15,11 @@ var (
 
 // save data directory architecture
 type PATHs struct {
-	Cd           string // ./miraiweed
+	cd           string // ./miraiweed
 	dlBase       string // ./miraiweed/dlBase
 	dlStorage    string // ./miraiweed/dlBase/dlStorage (a.k.a per run data container)
-	StudentsData string // ./miraiweed/dlBase/dlStorage/Students
-	TeachersData string // ./miraiweed/dlBase/dlStorage/Teachers
+	studentsData string // ./miraiweed/dlBase/dlStorage/Students
+	teachersData string // ./miraiweed/dlBase/dlStorage/Teachers
 	LoginInfo    string
 }
 
@@ -30,20 +30,69 @@ func NewPATHs() (*PATHs, error) {
 	if err != nil {
 		return nil, err
 	}
-	paths.Cd = pathsCd
+	paths.cd = pathsCd
 	// dlBase
 	paths.dlBase = dlFolderName
 
 	// DLStorage(Name Rule: yyyy_MM_dd_hhmmssSSS)
-	paths.dlStorage = filepath.Join(paths.Cd, paths.dlBase, strings.ReplaceAll(time.Now().Format("2006_01_02_150405.000"), ".", "_"))
-	paths.StudentsData = filepath.Join(paths.dlStorage, studentsFolderName)
-	paths.TeachersData = filepath.Join(paths.dlStorage, teachersFolderName)
-	paths.LoginInfo = filepath.Join(paths.Cd, LoginCsvFileName)
+	paths.dlStorage = strings.ReplaceAll(time.Now().Format("2006_01_02_150405.000"), ".", "_")
+	paths.studentsData = studentsFolderName
+	paths.teachersData = teachersFolderName
+	paths.LoginInfo = LoginCsvFileName
 
 	// create (if nothing) dl folder
-	if err = os.MkdirAll(paths.dlStorage, 0755); err != nil {
+	if err = os.MkdirAll(paths.Storage(), 0755); err != nil {
 		return nil, err
 	}
 
 	return paths, nil
+}
+
+func (paths *PATHs) Base() string {
+	return filepath.Join(paths.cd, paths.dlBase)
+}
+
+func (paths *PATHs) Storage() string {
+	return filepath.Join(paths.cd, paths.dlBase, paths.dlStorage)
+}
+
+func (paths *PATHs) StudentFolder() string {
+	return filepath.Join(paths.cd, paths.dlBase, paths.dlStorage, paths.studentsData)
+}
+
+func (paths *PATHs) TeacherFolder() string {
+	return filepath.Join(paths.cd, paths.dlBase, paths.dlStorage, paths.teachersData)
+}
+
+// overload path
+func (paths *PATHs) ChangeBase(newName string) (string, error) {
+	if _, err := os.Stat(filepath.Join(paths.cd, newName)); os.IsNotExist(err) {
+		return "", err
+	}
+	paths.dlBase = newName
+	return paths.Base(), nil
+}
+
+func (paths *PATHs) ChangeStorage(newName string) (string, error) {
+	if _, err := os.Stat(filepath.Join(paths.cd, paths.dlBase, newName)); os.IsNotExist(err) {
+		return "", err
+	}
+	paths.dlStorage = newName
+	return paths.Storage(), nil
+}
+
+func (paths *PATHs) ChangeStudentsFolder(newName string) (string, error) {
+	if _, err := os.Stat(filepath.Join(paths.cd, paths.dlBase, newName)); os.IsNotExist(err) {
+		return "", err
+	}
+	paths.studentsData = newName
+	return paths.StudentFolder(), nil
+}
+
+func (paths *PATHs) ChangeTeachersFolder(newName string) (string, error) {
+	if _, err := os.Stat(filepath.Join(paths.cd, paths.dlBase, newName)); os.IsNotExist(err) {
+		return "", err
+	}
+	paths.teachersData = newName
+	return paths.StudentFolder(), nil
 }

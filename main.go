@@ -14,8 +14,8 @@ var (
 	err                      error
 	bulk                     int
 	urls                     *ready.URLs
-	P                        *ready.Put
 	paths                    *ready.PATHs
+	P                        *ready.Put
 	default_miraiseedx       int = 7
 	default_concuarrency_num int = 5
 )
@@ -48,7 +48,7 @@ func hello() {
 	// 2.0 -  miraiseed instance number prompt. cuz miraiseed serving some url-s for bunch of local goverments.
 	var miraiseedX string
 	for {
-		miraiseedX, err = ready.PromptAndRead(fmt.Sprintf("enter miraiseed[X](default=%d): ", default_miraiseedx))
+		miraiseedX, err = ready.PromptAndRead(fmt.Sprintf("enter miraiseed[X] (default=%d): ", default_miraiseedx))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -68,7 +68,7 @@ func hello() {
 
 	// 3.0 - confirm concurrency limit(for semaphore). in general GIGA School Management Organizations are NOT experts in their field, luck of IT knowledge and development skills. therefore they are forced to use cheap and low-spec business PCs. use of `answer` number as the default value is a consideration for such an environment and is not intended to be otherwize.
 	for {
-		concurrency_num, err := ready.PromptAndRead("Concarrency Limit(default=5):")
+		concurrency_num, err := ready.PromptAndRead(fmt.Sprintf("Concarrency Limit (default=%d):", default_concuarrency_num))
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -53,9 +53,9 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 						scrape.GetScrapeCookies(urls.Base),
 						scrape.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, P),
 						scrape.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, P),
-						scrape.DownloadStudentsTask(filepath.Join(paths.StudentsData, rec.Name), rec.Name, P),
+						scrape.DownloadStudentsTask(filepath.Join(paths.StudentFolder(), rec.Name), rec.Name, P),
 						scrape.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, P),
-						scrape.DownloadTeachersTask(filepath.Join(paths.TeachersData, rec.Name), rec.Name, P),
+						scrape.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
 					}
 
 					err := chromedp.Run(ctx, tasks)
@@ -82,6 +82,6 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 	time.Sleep(2 * time.Second)
 }
 
-func AllForOneSheet() {
+func AllForOneSheet(paths *ready.PATHs) {
 
 }
