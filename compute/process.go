@@ -12,12 +12,12 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put) {
+func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 	// main process
 	// とりあえず実行はするがエラーを返さないのはなんかアレだな
 	records, errChan := ready.ReadCsv(paths.LoginInfo)
 	var wg sync.WaitGroup
-	sm := semaphore.NewWeighted(int64(5))
+	sm := semaphore.NewWeighted(int64(bulk))
 	for {
 		select {
 		case record, ok := <-records:
@@ -36,7 +36,7 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put) {
 
 					// goahead
 					opts := append(chromedp.DefaultExecAllocatorOptions[:],
-						chromedp.Flag("headless", false),
+						chromedp.Flag("headless", true),
 					)
 
 					allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)

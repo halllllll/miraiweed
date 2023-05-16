@@ -12,6 +12,7 @@ import (
 
 var (
 	err   error
+	bulk  int
 	urls  *ready.URLs
 	P     *ready.Put
 	paths *ready.PATHs
@@ -45,9 +46,12 @@ func hello() {
 	// 2.0 -  miraiseed instance number prompt. cuz miraiseed serving some url-s for bunch of local goverments.
 	var miraiseedX string
 	for {
-		miraiseedX, err = ready.PromptAndRead("enter miraiseedX(1~9): ")
+		miraiseedX, err = ready.PromptAndRead("enter miraiseed[X](default=7): ")
 		if err != nil {
 			log.Fatal(err)
+		}
+		if miraiseedX == "" {
+			miraiseedX = "7"
 		}
 		x, err := strconv.Atoi(miraiseedX)
 		if err != nil {
@@ -60,6 +64,25 @@ func hello() {
 		}
 	}
 
+	// confirm concurrency number(for semaphore)
+	for {
+		answer, err := ready.PromptAndRead("Concarrency Limit(default=5):")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if answer == "" {
+			answer = "5"
+		}
+		bulk, err = strconv.Atoi(answer)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if bulk <= 0 {
+			fmt.Println("we can only accept number upper 1.")
+		} else {
+			break
+		}
+	}
 	// OK, so, some settings under here
 
 	// main urls used in this project.
@@ -72,6 +95,6 @@ func main() {
 
 	hello()
 
-	compute.Procces(paths, urls, P)
+	compute.Procces(paths, urls, P, bulk)
 	ready.PromptAndRead("Byebye ﾉｼ")
 }
