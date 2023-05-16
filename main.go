@@ -11,11 +11,13 @@ import (
 )
 
 var (
-	err   error
-	bulk  int
-	urls  *ready.URLs
-	P     *ready.Put
-	paths *ready.PATHs
+	err                      error
+	bulk                     int
+	urls                     *ready.URLs
+	P                        *ready.Put
+	paths                    *ready.PATHs
+	default_miraiseedx       int = 7
+	default_concuarrency_num int = 5
 )
 
 func hello() {
@@ -46,12 +48,12 @@ func hello() {
 	// 2.0 -  miraiseed instance number prompt. cuz miraiseed serving some url-s for bunch of local goverments.
 	var miraiseedX string
 	for {
-		miraiseedX, err = ready.PromptAndRead("enter miraiseed[X](default=7): ")
+		miraiseedX, err = ready.PromptAndRead(fmt.Sprintf("enter miraiseed[X](default=%d): ", default_miraiseedx))
 		if err != nil {
 			log.Fatal(err)
 		}
 		if miraiseedX == "" {
-			miraiseedX = "7"
+			miraiseedX = strconv.Itoa(default_miraiseedx)
 		}
 		x, err := strconv.Atoi(miraiseedX)
 		if err != nil {
@@ -64,16 +66,16 @@ func hello() {
 		}
 	}
 
-	// confirm concurrency number(for semaphore)
+	// 3.0 - confirm concurrency limit(for semaphore). in general GIGA School Management Organizations are NOT experts in their field, luck of IT knowledge and development skills. therefore they are forced to use cheap and low-spec business PCs. use of `answer` number as the default value is a consideration for such an environment and is not intended to be otherwize.
 	for {
-		answer, err := ready.PromptAndRead("Concarrency Limit(default=5):")
+		concurrency_num, err := ready.PromptAndRead("Concarrency Limit(default=5):")
 		if err != nil {
 			log.Fatal(err)
 		}
-		if answer == "" {
-			answer = "5"
+		if concurrency_num == "" {
+			concurrency_num = strconv.Itoa(default_concuarrency_num)
 		}
-		bulk, err = strconv.Atoi(answer)
+		bulk, err = strconv.Atoi(concurrency_num)
 		if err != nil {
 			log.Fatal(err)
 		}

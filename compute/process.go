@@ -81,3 +81,7 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 	wg.Wait()
 	time.Sleep(2 * time.Second)
 }
+
+func AllForOneSheet() {
+
+}
