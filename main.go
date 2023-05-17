@@ -98,5 +98,8 @@ func main() {
 	hello()
 
 	compute.Procces(paths, urls, P, bulk)
+	if err = compute.AllForOneSheet(paths); err != nil {
+		P.ErrLog.Println(err)
+	}
 	ready.PromptAndRead("Byebye ﾉｼ")
 }
