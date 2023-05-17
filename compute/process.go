@@ -2,6 +2,7 @@ package compute
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"log"
 	"path/filepath"
@@ -86,8 +87,7 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 	time.Sleep(2 * time.Second)
 }
 
-func AllForOneSheet(paths *ready.PATHs, h []string, targetSheetName string) error {
-
+func AllForOneSheet(path string, h []string, targetSheetName string, P *ready.Put) error {
 	xlsx := excelize.NewFile()
 	sw, err := xlsx.NewStreamWriter("Sheet1")
 	if err != nil {
@@ -105,8 +105,8 @@ func AllForOneSheet(paths *ready.PATHs, h []string, targetSheetName string) erro
 	if err = sw.SetRow(header, _h); err != nil {
 		return err
 	}
-
-	err = filepath.WalkDir(paths.StudentFolder(), func(path string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+		fmt.Println(path)
 		if err != nil {
 			return errors.Wrap(err, "walkdir failed")
 		}
@@ -115,6 +115,7 @@ func AllForOneSheet(paths *ready.PATHs, h []string, targetSheetName string) erro
 		}
 
 		dir, _ := filepath.Split(path)
+		P.StdLog.Printf("excelize - %s", filepath.Base(dir))
 		targetxlsx, err := excelize.OpenFile(path)
 		if err != nil {
 			log.Fatal(err)
@@ -151,8 +152,9 @@ func AllForOneSheet(paths *ready.PATHs, h []string, targetSheetName string) erro
 	if err := sw.Flush(); err != nil {
 		return err
 	}
-	if err := xlsx.SaveAs(filepath.Join(paths.StudentFolder(), "all.xlsx")); err != nil {
+	if err := xlsx.SaveAs(filepath.Join(path, "all.xlsx")); err != nil {
 		return err
 	}
+	P.StdLog.Printf("save xlsx at %s\n", filepath.Join(path, "all.xlsx"))
 	return nil
 }
