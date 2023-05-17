@@ -2,7 +2,6 @@ package compute
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"log"
 	"path/filepath"
@@ -106,7 +105,6 @@ func AllForOneSheet(path string, h []string, targetSheetName string, P *ready.Pu
 		return err
 	}
 	err = filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
-		fmt.Println(path)
 		if err != nil {
 			return errors.Wrap(err, "walkdir failed")
 		}
