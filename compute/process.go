@@ -2,7 +2,6 @@ package compute
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"log"
 	"path/filepath"
@@ -103,12 +102,6 @@ func AllForOneSheet(paths *ready.PATHs) error {
 	if err = sw.SetRow(header, h); err != nil {
 		return err
 	}
-	fmt.Println(paths.StudentFolder())
-	// // ???
-	// filepath.WalkDir(paths.StudentFolder(), func(path string, d fs.DirEntry, err error) error {
-	// 	fmt.Printf("とれてるよね？ %s\n", path)
-	// 	return nil
-	// })
 
 	err = filepath.WalkDir(paths.StudentFolder(), func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
