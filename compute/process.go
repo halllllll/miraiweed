@@ -11,11 +11,69 @@ import (
 
 	"github.com/chromedp/chromedp"
 	"github.com/hallllll/miraiweed/ready"
-	"github.com/hallllll/miraiweed/scrape"
+	"github.com/hallllll/miraiweed/scraping"
 	"github.com/pkg/errors"
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/sync/semaphore"
 )
+
+type scrape_essentials struct {
+	ok     bool
+	record *ready.LoginRecord
+	wg     *sync.WaitGroup
+	sm     *semaphore.Weighted
+	p      *ready.Put
+	urls   *ready.URLs
+	paths  *ready.PATHs
+}
+
+func scrape(data *scrape_essentials) {
+	if !data.ok {
+		data.record = nil
+	} else {
+		data.wg.Add(1)
+		go func(rec ready.LoginRecord) {
+			if err := data.sm.Acquire(context.Background(), 1); err != nil {
+				data.p.ErrLog.Fatalln(err)
+			}
+			defer data.sm.Release(1)
+
+			defer data.p.StdLog.Printf("%s DONE.\n", rec.Name)
+			defer data.wg.Done()
+
+			// goahead
+			opts := append(chromedp.DefaultExecAllocatorOptions[:],
+				chromedp.Flag("headless", true),
+			)
+
+			allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+			allocCtx2, cancel := context.WithTimeout(allocCtx, 60*time.Second)
+
+			// start
+			ctx, cancel := chromedp.NewContext(
+				allocCtx2,
+				chromedp.WithLogf(data.p.StdLog.Printf),
+			)
+			defer cancel()
+
+			tasks := chromedp.Tasks{
+				scraping.GetScrapeCookies(data.urls.Base),
+				scraping.LoginTasks(data.urls.Login, rec.Name, rec.ID, rec.PW, data.p),
+				scraping.NavigateStudentsTasks(data.urls.StudentsSearch, rec.Name, data.p),
+				scraping.DownloadStudentsTask(filepath.Join(data.paths.StudentFolder(), rec.Name), rec.Name, data.p),
+				scraping.NavigateTeachersTasks(data.urls.TeacherSearch, rec.Name, data.p),
+				scraping.DownloadTeachersTask(filepath.Join(data.paths.TeacherFolder(), rec.Name), rec.Name, data.p),
+			}
+
+			err := chromedp.Run(ctx, tasks)
+			if err != nil {
+				data.p.ErrLog.Println(err)
+			}
+
+		}(*data.record)
+	}
+
+}
 
 func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 	// main process
@@ -26,51 +84,16 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 	for {
 		select {
 		case record, ok := <-records:
-			if !ok {
-				records = nil
-			} else {
-				wg.Add(1)
-				go func(rec ready.LoginRecord) {
-					if err := sm.Acquire(context.Background(), 1); err != nil {
-						P.ErrLog.Fatalln(err)
-					}
-					defer sm.Release(1)
+			d := new(scrape_essentials)
+			d.ok = ok
+			d.record = &record
+			d.wg = &wg
+			d.sm = sm
+			d.p = P
+			d.urls = urls
+			d.paths = paths
 
-					defer P.StdLog.Printf("%s DONE.\n", rec.Name)
-					defer wg.Done()
-
-					// goahead
-					opts := append(chromedp.DefaultExecAllocatorOptions[:],
-						chromedp.Flag("headless", true),
-					)
-
-					allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
-					allocCtx2, cancel := context.WithTimeout(allocCtx, 60*time.Second)
-
-					// start
-					ctx, cancel := chromedp.NewContext(
-						allocCtx2,
-						chromedp.WithLogf(P.StdLog.Printf),
-					)
-					defer cancel()
-
-					tasks := chromedp.Tasks{
-						scrape.GetScrapeCookies(urls.Base),
-						scrape.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, P),
-						scrape.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, P),
-						scrape.DownloadStudentsTask(filepath.Join(paths.StudentFolder(), rec.Name), rec.Name, P),
-						scrape.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, P),
-						scrape.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
-					}
-
-					err := chromedp.Run(ctx, tasks)
-					if err != nil {
-						P.ErrLog.Println(err)
-					}
-
-				}(record)
-			}
-
+			scrape(d)
 		case err, ok := <-errChan:
 			if !ok {
 				errChan = nil
