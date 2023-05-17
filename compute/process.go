@@ -86,7 +86,7 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 	time.Sleep(2 * time.Second)
 }
 
-func AllForOneSheet(paths *ready.PATHs) error {
+func AllForOneSheet(paths *ready.PATHs, h []string, targetSheetName string) error {
 
 	xlsx := excelize.NewFile()
 	sw, err := xlsx.NewStreamWriter("Sheet1")
@@ -98,8 +98,11 @@ func AllForOneSheet(paths *ready.PATHs) error {
 	if err != nil {
 		return err
 	}
-	h := []interface{}{"学校名", "ID", "学年", "クラス", "出席番号", "氏名", "ふりがな", "ここには入力しないでください", "備考", "パスワード", "ここには入力しないでください", "ユーザーコネクトID", "まなびポケット共通ID", "G Suite", "SSO連携メールアドレス", "Azure AD", "SSO連携メールアドレス", "C4th共通ユーザーID", "エラー内容"}
-	if err = sw.SetRow(header, h); err != nil {
+	_h := make([]interface{}, len(h))
+	for i, v := range h {
+		_h[i] = v
+	}
+	if err = sw.SetRow(header, _h); err != nil {
 		return err
 	}
 
@@ -117,7 +120,7 @@ func AllForOneSheet(paths *ready.PATHs) error {
 			log.Fatal(err)
 			return err
 		}
-		rows, err := targetxlsx.Rows("子ども情報")
+		rows, err := targetxlsx.Rows(targetSheetName)
 		for i := 0; rows.Next(); i++ {
 			row, err := rows.Columns()
 			if err != nil {
