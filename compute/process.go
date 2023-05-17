@@ -11,7 +11,7 @@ import (
 
 	"github.com/chromedp/chromedp"
 	"github.com/hallllll/miraiweed/ready"
-	"github.com/hallllll/miraiweed/scrape"
+	"github.com/hallllll/miraiweed/scraping"
 	"github.com/pkg/errors"
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/sync/semaphore"
@@ -55,12 +55,12 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 					defer cancel()
 
 					tasks := chromedp.Tasks{
-						scrape.GetScrapeCookies(urls.Base),
-						scrape.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, P),
-						scrape.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, P),
-						scrape.DownloadStudentsTask(filepath.Join(paths.StudentFolder(), rec.Name), rec.Name, P),
-						scrape.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, P),
-						scrape.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
+						scraping.GetScrapeCookies(urls.Base),
+						scraping.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, P),
+						scraping.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, P),
+						scraping.DownloadStudentsTask(filepath.Join(paths.StudentFolder(), rec.Name), rec.Name, P),
+						scraping.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, P),
+						scraping.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
 					}
 
 					err := chromedp.Run(ctx, tasks)
