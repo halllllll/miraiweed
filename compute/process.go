@@ -86,8 +86,7 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 	time.Sleep(2 * time.Second)
 }
 
-func AllForOneSheet(paths *ready.PATHs) error {
-
+func AllForOneSheet(path string, h []string, targetSheetName string, P *ready.Put) error {
 	xlsx := excelize.NewFile()
 	sw, err := xlsx.NewStreamWriter("Sheet1")
 	if err != nil {
@@ -98,12 +97,14 @@ func AllForOneSheet(paths *ready.PATHs) error {
 	if err != nil {
 		return err
 	}
-	h := []interface{}{"学校名", "ID", "学年", "クラス", "出席番号", "氏名", "ふりがな", "ここには入力しないでください", "備考", "パスワード", "ここには入力しないでください", "ユーザーコネクトID", "まなびポケット共通ID", "G Suite", "SSO連携メールアドレス", "Azure AD", "SSO連携メールアドレス", "C4th共通ユーザーID", "エラー内容"}
-	if err = sw.SetRow(header, h); err != nil {
+	_h := make([]interface{}, len(h))
+	for i, v := range h {
+		_h[i] = v
+	}
+	if err = sw.SetRow(header, _h); err != nil {
 		return err
 	}
-
-	err = filepath.WalkDir(paths.StudentFolder(), func(path string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return errors.Wrap(err, "walkdir failed")
 		}
@@ -112,12 +113,13 @@ func AllForOneSheet(paths *ready.PATHs) error {
 		}
 
 		dir, _ := filepath.Split(path)
+		P.StdLog.Printf("excelize - %s", filepath.Base(dir))
 		targetxlsx, err := excelize.OpenFile(path)
 		if err != nil {
 			log.Fatal(err)
 			return err
 		}
-		rows, err := targetxlsx.Rows("子ども情報")
+		rows, err := targetxlsx.Rows(targetSheetName)
 		for i := 0; rows.Next(); i++ {
 			row, err := rows.Columns()
 			if err != nil {
@@ -148,8 +150,9 @@ func AllForOneSheet(paths *ready.PATHs) error {
 	if err := sw.Flush(); err != nil {
 		return err
 	}
-	if err := xlsx.SaveAs(filepath.Join(paths.StudentFolder(), "all.xlsx")); err != nil {
+	if err := xlsx.SaveAs(filepath.Join(path, "all.xlsx")); err != nil {
 		return err
 	}
+	P.StdLog.Printf("save xlsx at %s\n", filepath.Join(path, "all.xlsx"))
 	return nil
 }

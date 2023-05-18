@@ -95,5 +95,5 @@ func (paths *PATHs) ChangeTeachersFolder(newName string) (string, error) {
 		return "", err
 	}
 	paths.teachersData = newName
-	return paths.StudentFolder(), nil
+	return paths.TeacherFolder(), nil
 }
