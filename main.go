@@ -53,7 +53,7 @@ func hello() {
 		}
 		fmt.Println("Template created. Please fill it with data and run the program again.")
 		P.InfoLog.Println("Create CSV Template.")
-		return // over
+		os.Exit(1) // over
 	}
 
 	// 2.0 -  miraiseed instance number prompt. cuz miraiseed serving some url-s for bunch of local goverments.
