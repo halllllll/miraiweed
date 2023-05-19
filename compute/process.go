@@ -2,8 +2,8 @@ package compute
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
-	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -104,6 +104,7 @@ func AllForOneSheet(path string, h []string, targetSheetName string, P *ready.Pu
 	if err = sw.SetRow(header, _h); err != nil {
 		return err
 	}
+	allElsx := filepath.Join(path, "all.xlsx")
 	err = filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return errors.Wrap(err, "walkdir failed")
@@ -111,13 +112,18 @@ func AllForOneSheet(path string, h []string, targetSheetName string, P *ready.Pu
 		if d.IsDir() {
 			return nil
 		}
+		if path == allElsx {
+			return nil
+		}
+		if filepath.Ext(path) != ".xlsx" {
+			return nil
+		}
 
 		dir, _ := filepath.Split(path)
 		P.StdLog.Printf("excelize - %s", filepath.Base(dir))
 		targetxlsx, err := excelize.OpenFile(path)
 		if err != nil {
-			log.Fatal(err)
-			return err
+			return fmt.Errorf("failed target xlsx at %s - %w", path, err)
 		}
 		rows, err := targetxlsx.Rows(targetSheetName)
 		for i := 0; rows.Next(); i++ {
@@ -148,11 +154,11 @@ func AllForOneSheet(path string, h []string, targetSheetName string, P *ready.Pu
 		return err
 	})
 	if err := sw.Flush(); err != nil {
-		return err
+		return fmt.Errorf("failed sream writer flush - %w", err)
 	}
-	if err := xlsx.SaveAs(filepath.Join(path, "all.xlsx")); err != nil {
-		return err
+	if err := xlsx.SaveAs(allElsx); err != nil {
+		return fmt.Errorf("faield to save xlsx - %w", err)
 	}
-	P.StdLog.Printf("save xlsx at %s\n", filepath.Join(path, "all.xlsx"))
+	P.StdLog.Printf("save xlsx at %s\n", allElsx)
 	return nil
 }

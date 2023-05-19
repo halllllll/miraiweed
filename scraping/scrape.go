@@ -15,7 +15,7 @@ import (
 var cookies []*network.Cookie
 
 func DownloadStudentsTask(filePath, login_name string, p *ready.Put) chromedp.Tasks {
-	p.StdLog.Printf("%s Download Challenge\n", login_name)
+	p.StdLog.Printf("%s Students Download Challenge\n", login_name)
 
 	return chromedp.Tasks{
 		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(filePath),
@@ -71,7 +71,7 @@ func LoginTasks(login_url, login_name, login_id, login_pw string, p *ready.Put) 
 }
 
 func NavigateStudentsTasks(student_search_url, login_name string, p *ready.Put) chromedp.Tasks {
-	p.StdLog.Printf("%s Loitering...\n", login_name)
+	p.StdLog.Printf("%s Students Loitering...\n", login_name)
 	return chromedp.Tasks{
 		chromedp.Navigate(student_search_url),
 		chromedp.Sleep(1 * time.Second),
@@ -85,7 +85,7 @@ func NavigateStudentsTasks(student_search_url, login_name string, p *ready.Put) 
 }
 
 func NavigateTeachersTasks(teacher_search_url, login_name string, p *ready.Put) chromedp.Tasks {
-	p.StdLog.Printf("%s Loitering...\n", login_name)
+	p.StdLog.Printf("%s Teacher Loitering...\n", login_name)
 	return chromedp.Tasks{
 		chromedp.Navigate(teacher_search_url),
 		chromedp.Sleep(1 * time.Second),
@@ -93,7 +93,7 @@ func NavigateTeachersTasks(teacher_search_url, login_name string, p *ready.Put) 
 }
 
 func DownloadTeachersTask(filePath, login_name string, p *ready.Put) chromedp.Tasks {
-	p.StdLog.Printf("%s Download Challenge\n", login_name)
+	p.StdLog.Printf("%s Teachers Download Challenge\n", login_name)
 
 	return chromedp.Tasks{
 		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(filePath),
