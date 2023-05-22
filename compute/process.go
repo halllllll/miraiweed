@@ -109,13 +109,7 @@ func AllForOneSheet(path string, h []string, targetSheetName string, P *ready.Pu
 		if err != nil {
 			return errors.Wrap(err, "walkdir failed")
 		}
-		if d.IsDir() {
-			return nil
-		}
-		if path == allElsx {
-			return nil
-		}
-		if filepath.Ext(path) != ".xlsx" {
+		if d.IsDir() || path == allElsx || filepath.Ext(path) != ".xlsx" {
 			return nil
 		}
 
