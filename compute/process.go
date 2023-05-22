@@ -18,7 +18,6 @@ import (
 
 func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 	// main process
-	// とりあえず実行はするがエラーを返さないのはなんかアレだな
 	records, errChan := ready.ReadCsv(paths.LoginInfo)
 	var wg sync.WaitGroup
 	sm := semaphore.NewWeighted(int64(bulk))
@@ -31,7 +30,7 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 				wg.Add(1)
 				go func(rec ready.LoginRecord) {
 					if err := sm.Acquire(context.Background(), 1); err != nil {
-						P.ErrLog.Fatalln(err)
+						P.ErrLog.Println(err)
 					}
 					defer sm.Release(1)
 
@@ -44,11 +43,11 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 					)
 
 					allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
-					allocCtx2, cancel := context.WithTimeout(allocCtx, 60*time.Second)
+					allocCtx, cancel = context.WithTimeout(allocCtx, 60*time.Second)
 
 					// start
 					ctx, cancel := chromedp.NewContext(
-						allocCtx2,
+						allocCtx,
 						chromedp.WithLogf(P.StdLog.Printf),
 					)
 					defer cancel()
@@ -64,9 +63,9 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 
 					err := chromedp.Run(ctx, tasks)
 					if err != nil {
+						err := fmt.Errorf("chromedp error occured during【%s】around ", rec.Name)
 						P.ErrLog.Println(err)
 					}
-
 				}(record)
 			}
 
