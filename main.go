@@ -18,7 +18,7 @@ var (
 	paths                    *ready.PATHs
 	P                        *ready.Put
 	default_miraiseedx       int      = 7
-	default_concuarrency_num int      = 5
+	default_concuarrency_num int      = 10
 	studentHeader            []string = []string{"学校名", "ID", "学年", "クラス", "出席番号", "氏名", "ふりがな", "ここには入力しないでください", "備考", "パスワード", "ここには入力しないでください", "ユーザーコネクトID", "まなびポケット共通ID", "G Suite SSO連携メールアドレス", "Azure AD SSO連携メールアドレス", "C4th共通ユーザーID", "エラー内容"}
 	studentSheetName         string   = "子ども情報"
 	teacherHeader            []string = []string{"学校名", "ID", "氏名", "ふりがな", "所属学年", "担任クラス", "担当教科", "授業を受け持つクラス", "備考", "パスワード", "ユーザーコネクトID", "ユーザーID（任意設定）", "まなびポケット共通ID", "先生カルテ閲覧権限 (Evit先生アンケート)", "G Suite SSO連携メールアドレス", "Azure AD SSO連携メールアドレス", "C4th共通ユーザーID", "エラー内容"}
@@ -96,6 +96,8 @@ func hello() {
 			break
 		}
 	}
+	P.InfoLog.Printf("miraiseedX = %s\n", miraiseedX)
+	P.InfoLog.Printf("bulk = %d\n", bulk)
 	// OK, so, some settings under here
 
 	// main urls used in this project.

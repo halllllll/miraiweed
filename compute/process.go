@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/chromedp/chromedp"
 	"github.com/hallllll/miraiweed/ready"
 	"github.com/hallllll/miraiweed/scraping"
@@ -42,16 +43,6 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 						chromedp.Flag("headless", true),
 					)
 
-					allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
-					allocCtx, cancel = context.WithTimeout(allocCtx, 60*time.Second)
-
-					// start
-					ctx, cancel := chromedp.NewContext(
-						allocCtx,
-						chromedp.WithLogf(P.StdLog.Printf),
-					)
-					defer cancel()
-
 					tasks := chromedp.Tasks{
 						scraping.GetScrapeCookies(urls.Base),
 						scraping.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, P),
@@ -61,8 +52,22 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 						scraping.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
 					}
 
-					err := chromedp.Run(ctx, tasks)
-					if err != nil {
+					operation := func() error {
+						allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+						allocCtx, cancel = context.WithTimeout(allocCtx, 60*time.Second)
+
+						// start
+						ctx, cancel := chromedp.NewContext(
+							allocCtx,
+							chromedp.WithLogf(P.StdLog.Printf),
+						)
+						defer cancel()
+						err := chromedp.Run(ctx, tasks)
+						return err
+					}
+					b := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 3)
+
+					if err := backoff.Retry(operation, b); err != nil {
 						err := fmt.Errorf("chromedp error occured during【%s】around ", rec.Name)
 						P.ErrLog.Println(err)
 					}
