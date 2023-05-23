@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/chromedp/chromedp"
 	"github.com/hallllll/miraiweed/ready"
 	"github.com/hallllll/miraiweed/scraping"
@@ -18,7 +19,6 @@ import (
 
 func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 	// main process
-	// とりあえず実行はするがエラーを返さないのはなんかアレだな
 	records, errChan := ready.ReadCsv(paths.LoginInfo)
 	var wg sync.WaitGroup
 	sm := semaphore.NewWeighted(int64(bulk))
@@ -31,7 +31,7 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 				wg.Add(1)
 				go func(rec ready.LoginRecord) {
 					if err := sm.Acquire(context.Background(), 1); err != nil {
-						P.ErrLog.Fatalln(err)
+						P.ErrLog.Println(err)
 					}
 					defer sm.Release(1)
 
@@ -43,16 +43,6 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 						chromedp.Flag("headless", true),
 					)
 
-					allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
-					allocCtx2, cancel := context.WithTimeout(allocCtx, 60*time.Second)
-
-					// start
-					ctx, cancel := chromedp.NewContext(
-						allocCtx2,
-						chromedp.WithLogf(P.StdLog.Printf),
-					)
-					defer cancel()
-
 					tasks := chromedp.Tasks{
 						scraping.GetScrapeCookies(urls.Base),
 						scraping.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, P),
@@ -62,11 +52,25 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 						scraping.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
 					}
 
-					err := chromedp.Run(ctx, tasks)
-					if err != nil {
+					operation := func() error {
+						allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+						allocCtx, cancel = context.WithTimeout(allocCtx, 60*time.Second)
+
+						// start
+						ctx, cancel := chromedp.NewContext(
+							allocCtx,
+							chromedp.WithLogf(P.StdLog.Printf),
+						)
+						defer cancel()
+						err := chromedp.Run(ctx, tasks)
+						return err
+					}
+					b := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 3)
+
+					if err := backoff.Retry(operation, b); err != nil {
+						err := fmt.Errorf("chromedp error occured during【%s】around ", rec.Name)
 						P.ErrLog.Println(err)
 					}
-
 				}(record)
 			}
 
@@ -109,13 +113,7 @@ func AllForOneSheet(path string, h []string, targetSheetName string, P *ready.Pu
 		if err != nil {
 			return errors.Wrap(err, "walkdir failed")
 		}
-		if d.IsDir() {
-			return nil
-		}
-		if path == allElsx {
-			return nil
-		}
-		if filepath.Ext(path) != ".xlsx" {
+		if d.IsDir() || path == allElsx || filepath.Ext(path) != ".xlsx" {
 			return nil
 		}
 

@@ -73,11 +73,12 @@ func ReadCsv(csvfilepath string) (chan LoginRecord, chan error) {
 				break
 			}
 			if err != nil {
-				errChan <- err
+				errChan <- fmt.Errorf("read error - INVARID RECORD : %+v, err - %w", record, err)
 				return
 			}
-			if len(record) != 3 {
-				errChan <- fmt.Errorf("invalid record: %v", record)
+			var san int = 3
+			if len(record) != san {
+				errChan <- fmt.Errorf("invalid record length - %d: %v", san, record)
 				return
 			}
 			c <- LoginRecord{
