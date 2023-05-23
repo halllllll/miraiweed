@@ -151,6 +151,10 @@ func AllForOneSheet(path string, h []string, targetSheetName string, P *ready.Pu
 		}
 		return err
 	})
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
 	if err := sw.Flush(); err != nil {
 		return fmt.Errorf("failed sream writer flush - %w", err)
 	}
