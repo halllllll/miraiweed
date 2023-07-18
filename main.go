@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/hallllll/miraiweed/compute"
-	"github.com/hallllll/miraiweed/ready"
+	"github.com/halllllll/miraiweed/compute"
+	"github.com/halllllll/miraiweed/ready"
 )
 
 var (

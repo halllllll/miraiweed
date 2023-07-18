@@ -10,8 +10,8 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/chromedp/chromedp"
-	"github.com/hallllll/miraiweed/ready"
-	"github.com/hallllll/miraiweed/scraping"
+	"github.com/halllllll/miraiweed/ready"
+	"github.com/halllllll/miraiweed/scraping"
 	"github.com/pkg/errors"
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/sync/semaphore"

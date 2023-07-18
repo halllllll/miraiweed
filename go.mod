@@ -1,4 +1,4 @@
-module github.com/hallllll/miraiweed
+module github.com/hallllllll/miraiweed
 
 go 1.20
 
