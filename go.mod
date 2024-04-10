@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 module github.com/halllllll/miraiweed
+=======
+module github.com/hallllllll/miraiweed
+>>>>>>> origin/main
 
 go 1.22.1
 
