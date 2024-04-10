@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/halllllll/miraiweed/compute"
@@ -22,6 +23,8 @@ var (
 	studentSheetName         string   = "子ども情報"
 	teacherHeader            []string = []string{"学校名", "ID", "氏名", "ふりがな", "所属学年", "担任クラス", "担当教科", "授業を受け持つクラス", "備考", "パスワード", "ユーザーコネクトID", "ユーザーID（任意設定）", "まなびポケット共通ID", "先生カルテ閲覧権限 (Evit先生アンケート)", "G Suite SSO連携メールアドレス", "Azure AD SSO連携メールアドレス", "C4th共通ユーザーID", "エラー内容"}
 	teacherSheetName         string   = "先生情報"
+
+	educationBoardKey string = "giga"
 )
 
 type XlsxInfo struct {
@@ -31,14 +34,14 @@ type XlsxInfo struct {
 }
 
 type ScrapeConfig struct {
-	eduBoard   eduBoardInfo
-	bulk       int
-	miraiseedX string
+	EduBoard   EduBoardInfo
+	Bulk       int
+	MiraiseedX string
 }
 
-type eduBoardInfo struct {
-	id string
-	pw string
+type EduBoardInfo struct {
+	Id string
+	Pw string
 }
 
 func hello() ScrapeConfig {
@@ -59,11 +62,46 @@ func hello() ScrapeConfig {
 	}
 
 	// 1.0 - Education Board Mode
-	// TODO
 	var isEduBoard bool
+	yesIamEdu, err := ready.PromptAndRead(fmt.Sprintf("Type '%s' if you want to use Education Board Mode (required ID/PW): ", educationBoardKey))
+	if err != nil {
+		log.Fatal(err)
+	}
+	if strings.ToLower(yesIamEdu) == strings.ToLower(educationBoardKey) {
+		isEduBoard = true
+	}
 
 	// 2.0 -  To login, ofcourse there are User ID/PW or going along with such info. Or, when you have selected EduBoard mode, required EduBoard ID/PW
-	if !isEduBoard {
+	if isEduBoard {
+		for {
+			eduBoardId, err := ready.PromptAndRead(fmt.Sprint("Education Board Account ID: "))
+			if err != nil {
+				log.Fatal(err)
+			}
+			if eduBoardId == "" {
+				fmt.Println("Can't Accept Empty Line")
+				continue
+			}
+			fmt.Println("thank you 😘")
+			helloResp.EduBoard.Id = eduBoardId
+			break
+		}
+		for {
+			eduBoardPw, err := ready.PromptAndRead(fmt.Sprint("Education Board Account Password: "))
+			if err != nil {
+				log.Fatal(err)
+			}
+			if eduBoardPw == "" {
+				fmt.Println("Can't Accept Empty Line")
+				continue
+			}
+			fmt.Println("thank you 🥰")
+			helloResp.EduBoard.Pw = eduBoardPw
+			break
+		}
+		P.InfoLog.Println("-- EduBoard Mode --")
+	} else {
+		P.InfoLog.Println("-- Normal Mode --")
 		if _, err := os.Stat(paths.LoginInfo); os.IsNotExist(err) {
 			fmt.Println("The CSV file does not exist. Creating a new template...")
 			if err = ready.CreateCsvTemplate(paths.LoginInfo); err != nil {
@@ -72,10 +110,6 @@ func hello() ScrapeConfig {
 			fmt.Println("Template created. Please fill it with data and run the program again.")
 			P.InfoLog.Println("Create CSV Template.")
 			os.Exit(1) // over
-		}
-	} else {
-		for {
-
 		}
 	}
 
@@ -95,7 +129,7 @@ func hello() ScrapeConfig {
 		if x <= 0 || 10 <= x {
 			fmt.Println("we can only accept number between 1 from 9.")
 		} else {
-			helloResp.miraiseedX = _miraiseedX
+			helloResp.MiraiseedX = _miraiseedX
 			break
 		}
 	}
@@ -116,17 +150,17 @@ func hello() ScrapeConfig {
 		if _bulk <= 0 {
 			fmt.Println("we can only accept number upper 1.")
 		} else {
-			helloResp.bulk = _bulk
+			helloResp.Bulk = _bulk
 			break
 		}
 	}
-	P.InfoLog.Printf("miraiseedX = %s\n", helloResp.miraiseedX)
-	P.InfoLog.Printf("bulk = %d\n", helloResp.bulk)
+	P.InfoLog.Printf("miraiseedX = %s\n", helloResp.MiraiseedX)
+	P.InfoLog.Printf("bulk = %d\n", helloResp.Bulk)
 	// OK, so, some settings under here
 
 	// main urls used in this project.
 	urls = ready.NewUrls()
-	urls.PrepareUrl(helloResp.miraiseedX)
+	urls.PrepareUrl(helloResp.MiraiseedX)
 
 	return *helloResp
 }
@@ -135,7 +169,7 @@ func main() {
 
 	resp := hello()
 
-	compute.Procces(paths, urls, P, resp.bulk)
+	compute.Procces(paths, urls, P, resp.Bulk)
 
 	var wg sync.WaitGroup
 	info := []XlsxInfo{
