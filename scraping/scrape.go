@@ -9,7 +9,7 @@ import (
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
-	"github.com/hallllll/miraiweed/ready"
+	"github.com/halllllll/miraiweed/ready"
 )
 
 var cookies []*network.Cookie
