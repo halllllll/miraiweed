@@ -1,6 +1,6 @@
 module github.com/halllllll/miraiweed
 
-go 1.20
+go 1.22.1
 
 require (
 	github.com/cenkalti/backoff/v4 v4.2.1

@@ -21,12 +21,12 @@ func DownloadStudentsTask(filePath, login_name string, p *ready.Put) chromedp.Ta
 		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(filePath),
 		chromedp.WaitVisible("#downloadExcel", chromedp.ByID),
 		chromedp.WaitEnabled("#downloadExcel", chromedp.ByID),
-		chromedp.Sleep(4 * time.Second),
+		chromedp.Sleep(2 * time.Second),
 		chromedp.Click("#downloadExcel", chromedp.ByID),
 		chromedp.WaitVisible("#f30501 > div:nth-child(8)", chromedp.ByQuery),
 		chromedp.WaitVisible("#download", chromedp.ByID),
 		chromedp.Click("#download", chromedp.ByID),
-		chromedp.Sleep(4 * time.Second),
+		chromedp.Sleep(2 * time.Second),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			fmt.Printf("student excel downloaded: %s\n", filepath.Base(filePath))
 			return nil
@@ -99,11 +99,11 @@ func DownloadTeachersTask(filePath, login_name string, p *ready.Put) chromedp.Ta
 		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(filePath),
 		chromedp.WaitVisible("#downloadExcel", chromedp.ByID),
 		chromedp.WaitEnabled("#downloadExcel", chromedp.ByID),
-		chromedp.Sleep(4 * time.Second),
+		chromedp.Sleep(2 * time.Second),
 		chromedp.Click("#downloadExcel", chromedp.ByID),
 		chromedp.WaitVisible("#download", chromedp.ByID),
 		chromedp.Click("#download", chromedp.ByID),
-		chromedp.Sleep(4 * time.Second),
+		chromedp.Sleep(2 * time.Second),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			fmt.Printf("downloaded teacher excel: %s\n", filepath.Base(filePath))
 			return nil
