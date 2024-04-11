@@ -54,7 +54,7 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 
 					operation := func() error {
 						allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
-						allocCtx, cancel = context.WithTimeout(allocCtx, 60*time.Second)
+						allocCtx, cancel = context.WithTimeout(allocCtx, 30*time.Second)
 
 						// start
 						ctx, cancel := chromedp.NewContext(
@@ -65,7 +65,7 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 						err := chromedp.Run(ctx, tasks)
 						return err
 					}
-					b := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 3)
+					b := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 2)
 
 					if err := backoff.Retry(operation, b); err != nil {
 						err := fmt.Errorf("chromedp error occured during【%s】around ", rec.Name)

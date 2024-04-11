@@ -23,12 +23,26 @@ func DownloadStudentsTask(filePath, login_name string, p *ready.Put) chromedp.Ta
 		chromedp.WaitEnabled("#downloadExcel", chromedp.ByID),
 		chromedp.Sleep(2 * time.Second),
 		chromedp.Click("#downloadExcel", chromedp.ByID),
+<<<<<<< HEAD
 		chromedp.WaitVisible("#f30501 > div:nth-child(8)", chromedp.ByQuery),
 		chromedp.WaitVisible("#download", chromedp.ByID),
 		chromedp.Click("#download", chromedp.ByID),
 		chromedp.Sleep(2 * time.Second),
+=======
+		// anually update modal
+>>>>>>> main
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			fmt.Printf("student excel downloaded: %s\n", filepath.Base(filePath))
+			// checking modal view
+			var stillNONGoingAnuallyUpdate bool
+			err := chromedp.Evaluate(fmt.Sprintf(`%s.offsetParent !== null`, fmt.Sprintf("document.querySelector('%s')", UntilNotDoneAnnuralUpdateCssSelector)), &stillNONGoingAnuallyUpdate).Do(ctx)
+			if err != nil {
+				return err
+			}
+			if stillNONGoingAnuallyUpdate {
+				stillNOUpdateingStatus(filePath).Do(ctx)
+			}
+			normalDownloadStatus(filePath).Do(ctx)
+
 			return nil
 		}),
 	}
@@ -105,7 +119,34 @@ func DownloadTeachersTask(filePath, login_name string, p *ready.Put) chromedp.Ta
 		chromedp.Click("#download", chromedp.ByID),
 		chromedp.Sleep(2 * time.Second),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			fmt.Printf("downloaded teacher excel: %s\n", filepath.Base(filePath))
+			fmt.Printf("teacher excel downloaded : %s\n", filepath.Base(filePath))
+			return nil
+		}),
+	}
+}
+
+func normalDownloadStatus(filePath string) chromedp.Tasks {
+	return chromedp.Tasks{
+		chromedp.WaitVisible("#f30501 > div:nth-child(8)", chromedp.ByQuery),
+		chromedp.WaitVisible("#download", chromedp.ByID),
+		chromedp.Click("#download", chromedp.ByID),
+		chromedp.Sleep(4 * time.Second),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			fmt.Printf("students excel downloaded: %s\n", filepath.Base(filePath))
+			return nil
+		}),
+	}
+}
+
+func stillNOUpdateingStatus(filePath string) chromedp.Tasks {
+	// cilck button inner modal
+	return chromedp.Tasks{
+		chromedp.WaitVisible(UntilNotDoneAnnuralUpdateCssSelector, chromedp.ByQuery),
+		chromedp.WaitEnabled(UntilNotDoneAnnuralUpdateCssSelector, chromedp.ByQuery),
+		chromedp.Click(UntilNotDoneAnnuralUpdateCssSelector, chromedp.ByQuery),
+		chromedp.Sleep(4 * time.Second),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			fmt.Printf("excel found (but not anual update): %s\n", filepath.Base(filePath))
 			return nil
 		}),
 	}
