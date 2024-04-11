@@ -1,8 +1,9 @@
-module github.com/hallllll/miraiweed
+module github.com/halllllll/miraiweed
 
 go 1.20
 
 require (
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/chromedp/cdproto v0.0.0-20230512205701-c5692af2b095
 	github.com/chromedp/chromedp v0.9.1
 	github.com/gocarina/gocsv v0.0.0-20230513223533-9ddd7fd60602
@@ -11,7 +12,6 @@ require (
 )
 
 require (
-	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.3 // indirect
