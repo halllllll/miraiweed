@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/halllllll/miraiweed/compute"
@@ -34,9 +33,10 @@ type XlsxInfo struct {
 }
 
 type ScrapeConfig struct {
-	EduBoard   EduBoardInfo
-	Bulk       int
-	MiraiseedX string
+	IsEduboardMode bool
+	EduBoard       EduBoardInfo
+	Bulk           int
+	MiraiseedX     string
 }
 
 type EduBoardInfo struct {
@@ -63,15 +63,20 @@ func hello() ScrapeConfig {
 
 	// 1.0 - Education Board Mode
 	var isEduBoard bool
-	yesIamEdu, err := ready.PromptAndRead(fmt.Sprintf("Type '%s' if you want to use Education Board Mode (required ID/PW): ", educationBoardKey))
-	if err != nil {
-		log.Fatal(err)
-	}
-	if strings.ToLower(yesIamEdu) == strings.ToLower(educationBoardKey) {
-		isEduBoard = true
-	}
+	// INDEV
+	/*
+
+		yesIamEdu, err := ready.PromptAndRead(fmt.Sprintf("Type '%s' if you want to use Education Board Mode (required ID/PW): ", educationBoardKey))
+		if err != nil {
+			log.Fatal(err)
+		}
+		if strings.ToLower(yesIamEdu) == strings.ToLower(educationBoardKey) {
+			isEduBoard = true
+		}
+	*/
 
 	// 2.0 -  To login, ofcourse there are User ID/PW or going along with such info. Or, when you have selected EduBoard mode, required EduBoard ID/PW
+
 	if isEduBoard {
 		for {
 			eduBoardId, err := ready.PromptAndRead(fmt.Sprint("Education Board Account ID: "))
@@ -99,8 +104,10 @@ func hello() ScrapeConfig {
 			helloResp.EduBoard.Pw = eduBoardPw
 			break
 		}
+		helloResp.IsEduboardMode = true
 		P.InfoLog.Println("-- EduBoard Mode --")
 	} else {
+		helloResp.IsEduboardMode = false
 		P.InfoLog.Println("-- Normal Mode --")
 		if _, err := os.Stat(paths.LoginInfo); os.IsNotExist(err) {
 			fmt.Println("The CSV file does not exist. Creating a new template...")
@@ -168,8 +175,15 @@ func hello() ScrapeConfig {
 func main() {
 
 	resp := hello()
-
-	compute.Procces(paths, urls, P, resp.Bulk)
+	if resp.IsEduboardMode {
+		p := &ready.LoginRecord{
+			ID: resp.EduBoard.Id,
+			PW: resp.EduBoard.Pw,
+		}
+		compute.EduBoardProcess(paths, urls, *p, P)
+	} else {
+		compute.Procces(paths, urls, P, resp.Bulk)
+	}
 
 	var wg sync.WaitGroup
 	info := []XlsxInfo{

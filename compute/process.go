@@ -12,10 +12,51 @@ import (
 	"github.com/chromedp/chromedp"
 	"github.com/halllllll/miraiweed/ready"
 	"github.com/halllllll/miraiweed/scraping"
+	scrape_eduboard "github.com/halllllll/miraiweed/scraping/eduboard"
 	"github.com/pkg/errors"
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/sync/semaphore"
 )
+
+func EduBoardProcess(paths *ready.PATHs, urls *ready.URLs, rec ready.LoginRecord, P *ready.Put) error {
+	ebp := scrape_eduboard.NewEduBoardScrape(P)
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.Flag("headless", true),
+	)
+
+	tasks := chromedp.Tasks{
+		scraping.GetScrapeCookies(urls.Base),
+		scraping.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, P),
+		ebp.NavigatingEduBoardLogin(urls.EduBoardHome),
+		chromedp.Click(`.borderB > tbody:nth-child(1) > tr:nth-child(4) > td:nth-child(1) > input:nth-child(1)`, chromedp.ByQuery),
+		chromedp.Sleep(500 * time.Millisecond),
+		ebp.NavigatingEduBoardSchoolList(),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			err := ebp.LoiterAllSchool().Do(ctx)
+			if err != nil {
+				return err
+			}
+			fmt.Println("とりあえずここまで")
+			return nil
+		}),
+
+		// scraping.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, P),
+		// scraping.DownloadStudentsTask(filepath.Join(paths.StudentFolder(), rec.Name), rec.Name, P),
+		// scraping.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, P),
+		// scraping.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
+	}
+
+	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	allocCtx, cancel = context.WithTimeout(allocCtx, 30*time.Second)
+
+	// start
+	ctx, cancel := chromedp.NewContext(
+		allocCtx,
+		chromedp.WithLogf(P.StdLog.Printf),
+	)
+	defer cancel()
+	return chromedp.Run(ctx, tasks)
+}
 
 func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 	// main process
@@ -43,13 +84,31 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 						chromedp.Flag("headless", true),
 					)
 
+					pararellTasks := []chromedp.Tasks{
+						{
+							scraping.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, P),
+							scraping.DownloadStudentsTask(filepath.Join(paths.StudentFolder(), rec.Name), rec.Name, P),
+						}, {
+							scraping.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, P),
+							scraping.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
+						},
+					}
+
 					tasks := chromedp.Tasks{
 						scraping.GetScrapeCookies(urls.Base),
 						scraping.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, P),
-						scraping.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, P),
-						scraping.DownloadStudentsTask(filepath.Join(paths.StudentFolder(), rec.Name), rec.Name, P),
-						scraping.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, P),
-						scraping.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
+						chromedp.ActionFunc(func(ctx context.Context) error {
+							var innerWg sync.WaitGroup
+							for _, t := range pararellTasks {
+								innerWg.Add(1)
+								go func(task chromedp.Tasks) {
+									task.Do(ctx)
+									innerWg.Done()
+								}(t)
+								t.Do(ctx)
+							}
+							return nil
+						}),
 					}
 
 					operation := func() error {

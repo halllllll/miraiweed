@@ -14,6 +14,9 @@ import (
 
 var cookies []*network.Cookie
 
+// Handle the modal that appears during the fiscal year update period
+var UntilNotDoneAnnuralUpdateCssSelector string = `#ui-id-15 > div:nth-child(1) > div:nth-child(2) > span:nth-child(2) > input:nth-child(1)`
+
 func DownloadStudentsTask(filePath, login_name string, p *ready.Put) chromedp.Tasks {
 	p.StdLog.Printf("%s Students Download Challenge\n", login_name)
 
@@ -23,14 +26,7 @@ func DownloadStudentsTask(filePath, login_name string, p *ready.Put) chromedp.Ta
 		chromedp.WaitEnabled("#downloadExcel", chromedp.ByID),
 		chromedp.Sleep(2 * time.Second),
 		chromedp.Click("#downloadExcel", chromedp.ByID),
-<<<<<<< HEAD
-		chromedp.WaitVisible("#f30501 > div:nth-child(8)", chromedp.ByQuery),
-		chromedp.WaitVisible("#download", chromedp.ByID),
-		chromedp.Click("#download", chromedp.ByID),
-		chromedp.Sleep(2 * time.Second),
-=======
 		// anually update modal
->>>>>>> main
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			// checking modal view
 			var stillNONGoingAnuallyUpdate bool
@@ -74,7 +70,7 @@ func LoginTasks(login_url, login_name, login_id, login_pw string, p *ready.Put) 
 	p.StdLog.Printf("%s Login Challenge\n", login_name)
 	return chromedp.Tasks{
 		chromedp.Navigate(login_url),
-		chromedp.WaitNotVisible("#loading", chromedp.ByID),
+		chromedp.WaitNotVisible(`#loading`, chromedp.ByID),
 		chromedp.WaitVisible(`input[name="number"]`, chromedp.ByQuery),
 		chromedp.SendKeys(`input[name="number"]`, login_id, chromedp.ByQuery),
 		chromedp.WaitVisible(`input[name="pass"]`, chromedp.ByQuery),

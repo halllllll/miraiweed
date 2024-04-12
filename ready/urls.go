@@ -8,6 +8,8 @@ type URLs struct {
 	Login                 string
 	Service               string
 	EducationBoard        string
+	DisplaySchoolList     string
+	EduBoardHome          string
 	StudentsSearch        string
 	StudentsSearchReflesh string
 	TeacherSearch         string
@@ -25,6 +27,8 @@ func (u *URLs) PrepareUrl(num string) {
 	u.Service = fmt.Sprintf("%s/seed/vw030101/displaySchoolAdminMenu", u.Base)
 	u.EducationBoard = fmt.Sprintf("%s/seed/vw030101/displayEducationBoardMenu", u.Base)
 	u.StudentsSearch = fmt.Sprintf("%s/seed/vw030501/displaySearchChildInfo", u.Base)
+	u.DisplaySchoolList = fmt.Sprintf("%s/seed/vw090101/displaySchoolList", u.Base)
+	u.EduBoardHome = fmt.Sprintf("%s/seed/vw030101/displayEducationBoardMenu", u.Base)
 	u.StudentsSearchReflesh = fmt.Sprintf("%s/seed/vw030501/refresh", u.Base)
 	u.Search = fmt.Sprintf("%s/seed/vw030501/search", u.Base)
 	u.TeacherSearch = fmt.Sprintf("%s/seed/vw030401/", u.Base)
