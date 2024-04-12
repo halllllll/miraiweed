@@ -49,6 +49,7 @@ func (eb *EduBoardScrape) NavigatingEduBoardLogin(url string) chromedp.Tasks {
 	}
 }
 
+// TODO
 func (eb *EduBoardScrape) NavigatingEduBoardSchoolList() chromedp.Tasks {
 	var schoolcodeNodeList []*cdp.Node
 	// var schoolDistinationList []*cdp.Node
@@ -71,15 +72,10 @@ func (eb *EduBoardScrape) NavigatingEduBoardSchoolList() chromedp.Tasks {
 	}
 }
 
+// TODO
 func (eb *EduBoardScrape) LoiterAllSchool() chromedp.ActionFunc {
 	return func(ctx context.Context) error {
 
 		return nil
 	}
 }
-
-// func toriaezu()chromedp.Tasks{
-// 	return chromedp.Tasks{
-// 		chromedp.Click()
-// 	}
-// }
