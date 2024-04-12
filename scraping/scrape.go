@@ -24,7 +24,7 @@ func DownloadStudentsTask(filePath, login_name string, p *ready.Put) chromedp.Ta
 		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(filePath),
 		chromedp.WaitVisible("#downloadExcel", chromedp.ByID),
 		chromedp.WaitEnabled("#downloadExcel", chromedp.ByID),
-		chromedp.Sleep(2 * time.Second),
+		chromedp.Sleep(100 * time.Millisecond),
 		chromedp.Click("#downloadExcel", chromedp.ByID),
 		// anually update modal
 		chromedp.ActionFunc(func(ctx context.Context) error {
@@ -38,7 +38,6 @@ func DownloadStudentsTask(filePath, login_name string, p *ready.Put) chromedp.Ta
 				stillNOUpdateingStatus(filePath).Do(ctx)
 			}
 			normalDownloadStatus(filePath).Do(ctx)
-
 			return nil
 		}),
 	}
@@ -76,7 +75,7 @@ func LoginTasks(login_url, login_name, login_id, login_pw string, p *ready.Put) 
 		chromedp.WaitVisible(`input[name="pass"]`, chromedp.ByQuery),
 		chromedp.SendKeys(`input[name="pass"]`, login_pw, chromedp.ByQuery),
 		chromedp.Click(`input[name="inputLogin"]`, chromedp.ByQuery),
-		chromedp.Sleep(1 * time.Second),
+		chromedp.Sleep(100 * time.Millisecond),
 	}
 }
 
@@ -84,10 +83,10 @@ func NavigateStudentsTasks(student_search_url, login_name string, p *ready.Put) 
 	p.StdLog.Printf("%s Students Loitering...\n", login_name)
 	return chromedp.Tasks{
 		chromedp.Navigate(student_search_url),
-		chromedp.Sleep(1 * time.Second),
+		chromedp.Sleep(100 * time.Millisecond),
 		chromedp.WaitVisible(`#ifGradeId`, chromedp.ByID),
 		chromedp.SetValue(`#ifGradeId`, "0", chromedp.ByID),
-		chromedp.Sleep(1 * time.Second),
+		chromedp.Sleep(100 * time.Millisecond),
 		chromedp.WaitVisible(`#ifClassId`, chromedp.ByID),
 		chromedp.SetValue(`#ifClassId`, "0", chromedp.ByID),
 		chromedp.Click(".searchButton", chromedp.ByQuery),
@@ -98,7 +97,7 @@ func NavigateTeachersTasks(teacher_search_url, login_name string, p *ready.Put) 
 	p.StdLog.Printf("%s Teacher Loitering...\n", login_name)
 	return chromedp.Tasks{
 		chromedp.Navigate(teacher_search_url),
-		chromedp.Sleep(1 * time.Second),
+		chromedp.Sleep(100 * time.Millisecond),
 	}
 }
 
@@ -109,11 +108,11 @@ func DownloadTeachersTask(filePath, login_name string, p *ready.Put) chromedp.Ta
 		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(filePath),
 		chromedp.WaitVisible("#downloadExcel", chromedp.ByID),
 		chromedp.WaitEnabled("#downloadExcel", chromedp.ByID),
-		chromedp.Sleep(2 * time.Second),
+		chromedp.Sleep(500 * time.Millisecond),
 		chromedp.Click("#downloadExcel", chromedp.ByID),
 		chromedp.WaitVisible("#download", chromedp.ByID),
 		chromedp.Click("#download", chromedp.ByID),
-		chromedp.Sleep(2 * time.Second),
+		chromedp.Sleep(500 * time.Millisecond),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			fmt.Printf("teacher excel downloaded : %s\n", filepath.Base(filePath))
 			return nil
@@ -126,7 +125,7 @@ func normalDownloadStatus(filePath string) chromedp.Tasks {
 		chromedp.WaitVisible("#f30501 > div:nth-child(8)", chromedp.ByQuery),
 		chromedp.WaitVisible("#download", chromedp.ByID),
 		chromedp.Click("#download", chromedp.ByID),
-		chromedp.Sleep(4 * time.Second),
+		chromedp.Sleep(100 * time.Millisecond),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			fmt.Printf("students excel downloaded: %s\n", filepath.Base(filePath))
 			return nil
@@ -140,7 +139,7 @@ func stillNOUpdateingStatus(filePath string) chromedp.Tasks {
 		chromedp.WaitVisible(UntilNotDoneAnnuralUpdateCssSelector, chromedp.ByQuery),
 		chromedp.WaitEnabled(UntilNotDoneAnnuralUpdateCssSelector, chromedp.ByQuery),
 		chromedp.Click(UntilNotDoneAnnuralUpdateCssSelector, chromedp.ByQuery),
-		chromedp.Sleep(4 * time.Second),
+		chromedp.Sleep(100 * time.Millisecond),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			fmt.Printf("excel found (but not anual update): %s\n", filepath.Base(filePath))
 			return nil

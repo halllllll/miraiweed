@@ -84,31 +84,39 @@ func Procces(paths *ready.PATHs, urls *ready.URLs, P *ready.Put, bulk int) {
 						chromedp.Flag("headless", true),
 					)
 
-					pararellTasks := []chromedp.Tasks{
-						{
-							scraping.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, P),
-							scraping.DownloadStudentsTask(filepath.Join(paths.StudentFolder(), rec.Name), rec.Name, P),
-						}, {
-							scraping.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, P),
-							scraping.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
-						},
-					}
+					// pararellTasks := []chromedp.Tasks{
+					// 	{
+					// 		scraping.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, P),
+					// 		scraping.DownloadStudentsTask(filepath.Join(paths.StudentFolder(), rec.Name), rec.Name, P),
+					// 	}, {
+					// 		scraping.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, P),
+					// 		scraping.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
+					// 	},
+					// }
 
 					tasks := chromedp.Tasks{
 						scraping.GetScrapeCookies(urls.Base),
 						scraping.LoginTasks(urls.Login, rec.Name, rec.ID, rec.PW, P),
-						chromedp.ActionFunc(func(ctx context.Context) error {
-							var innerWg sync.WaitGroup
-							for _, t := range pararellTasks {
-								innerWg.Add(1)
-								go func(task chromedp.Tasks) {
-									task.Do(ctx)
-									innerWg.Done()
-								}(t)
-								t.Do(ctx)
-							}
-							return nil
-						}),
+						/*
+							chromedp.ActionFunc(func(ctx context.Context) error {
+								var innerWg sync.WaitGroup
+								for _, t := range pararellTasks {
+									innerWg.Add(1)
+									go func(task chromedp.Tasks) {
+										task.Do(ctx)
+										innerWg.Done()
+									}(t)
+									// 本当は並行処理したかったがchromedpだと無理っぽい
+									// なので一回ずつwaitするという意味のない書き方だがせっかく書いたのでなにか別の方法が思いつくまでこのままにしておく
+									innerWg.Wait()
+								}
+								return nil
+							}),
+						*/
+						scraping.NavigateStudentsTasks(urls.StudentsSearch, rec.Name, P),
+						scraping.DownloadStudentsTask(filepath.Join(paths.StudentFolder(), rec.Name), rec.Name, P),
+						scraping.NavigateTeachersTasks(urls.TeacherSearch, rec.Name, P),
+						scraping.DownloadTeachersTask(filepath.Join(paths.TeacherFolder(), rec.Name), rec.Name, P),
 					}
 
 					operation := func() error {
